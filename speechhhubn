@@ -1,0 +1,156 @@
+-- Pet Level-Up GUI by Chazai (Now with Speedhub Title + Fully Draggable)
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "PetLevelUpVisual"
+gui.ResetOnSpawn = false
+
+-- Main Frame
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 260, 0, 160)
+frame.Position = UDim2.new(0.5, -130, 0.5, -80)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+
+-- Title Above Frame (Speedhub - Fast Age)
+local hubTitle = Instance.new("TextLabel", frame)
+hubTitle.Size = UDim2.new(1, 0, 0, 20)
+hubTitle.Position = UDim2.new(0, 0, 0, -22)
+hubTitle.BackgroundTransparency = 1
+hubTitle.Text = "⚡ Speedhub - Fast Age"
+hubTitle.TextColor3 = Color3.fromRGB(255, 255, 0)
+hubTitle.Font = Enum.Font.SourceSansBold
+hubTitle.TextSize = 16
+
+-- Manual Draggable
+local dragging, dragInput, dragStart, startPos = false
+
+frame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = frame.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+frame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+-- GUI Inside Frame
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+title.Text = "🐾 Level Up Your Pet"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 18
+
+local user = Instance.new("TextLabel", frame)
+user.Size = UDim2.new(1, 0, 0, 25)
+user.Position = UDim2.new(0, 0, 0, 30)
+user.BackgroundTransparency = 1
+user.Text = "User: ScriptByteX"
+user.TextColor3 = Color3.fromRGB(255, 100, 100)
+user.Font = Enum.Font.SourceSans
+user.TextSize = 16
+
+local button = Instance.new("TextButton", frame)
+button.Size = UDim2.new(0.8, 0, 0, 40)
+button.Position = UDim2.new(0.1, 0, 0, 60)
+button.BackgroundColor3 = Color3.fromRGB(255, 70, 70)
+button.Text = "🔥 Level Up 50+ Instantly"
+button.TextColor3 = Color3.new(1, 1, 1)
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 16
+
+local petInfo = Instance.new("TextLabel", frame)
+petInfo.Size = UDim2.new(1, 0, 0, 30)
+petInfo.Position = UDim2.new(0, 0, 0, 110)
+petInfo.BackgroundTransparency = 1
+petInfo.TextColor3 = Color3.fromRGB(180, 255, 180)
+petInfo.Font = Enum.Font.SourceSans
+petInfo.TextSize = 14
+petInfo.Text = ""
+
+local credit = Instance.new("TextLabel", frame)
+credit.Size = UDim2.new(1, 0, 0, 20)
+credit.Position = UDim2.new(0, 0, 1, -20)
+credit.BackgroundTransparency = 1
+credit.Text = "Created by Chazai"
+credit.TextColor3 = Color3.fromRGB(150, 150, 150)
+credit.Font = Enum.Font.SourceSansItalic
+credit.TextSize = 14
+
+-- Popup
+local popup = Instance.new("TextLabel", gui)
+popup.Size = UDim2.new(0, 350, 0, 50)
+popup.Position = UDim2.new(0.5, -175, 0.35, -25)
+popup.BackgroundColor3 = Color3.fromRGB(50, 200, 100)
+popup.Text = "🎉 Congrats! You got a Level 50 pet!"
+popup.TextColor3 = Color3.new(1, 1, 1)
+popup.Font = Enum.Font.SourceSansBold
+popup.TextSize = 20
+popup.Visible = false
+popup.BorderSizePixel = 0
+popup.TextWrapped = true
+
+-- Held Tool Finder
+local function getHeldTool()
+	for _, v in ipairs(char:GetChildren()) do
+		if v:IsA("Tool") then
+			return v
+		end
+	end
+	return nil
+end
+
+-- Show Popup
+local function showPopup(msg)
+	popup.Text = msg
+	popup.Visible = true
+	task.delay(3, function()
+		popup.Visible = false
+	end)
+end
+
+-- Update Pet Age
+local function levelUpPet(tool)
+	if tool then
+		local name = tool.Name
+		local updated = name:gsub("Age%s%d+", "Age 50")
+		if updated ~= name then
+			tool.Name = updated
+			petInfo.Text = "✅ Pet leveled to Age 50: " .. updated
+			showPopup("🎉 Congrats! You got a Level 50 pet!")
+		else
+			petInfo.Text = "❌ Couldn't find Age to update!"
+		end
+	end
+end
+
+-- Button Action
+button.MouseButton1Click:Connect(function()
+	local heldTool = getHeldTool()
+	if heldTool then
+		levelUpPet(heldTool)
+	else
+		petInfo.Text = "❌ Hold a pet to level up!"
+	end
+end)
